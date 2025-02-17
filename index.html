@@ -1,11 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DiDaDo</title>
+    <link rel="stylesheet" href="./css/modern-normalize.css">
+    <link rel="stylesheet" href="./css/custom.css">
+    <title>Tic-Tac-Toe</title>
 </head>
+
 <body>
+
+    <div id="main">
+        <div id="error" class="hide">  
+            <div class="container">
+                <p class="title">Oops</p>
+                <p class="msg"></p> 
+                <div class="btn-container">
+                    <button>Got It!!</button> 
+                </div>
+            </div>
+        </div>
+
+        <header id="header" class="full-screen slide"> 
+            <video autoplay muted loop id="header-bg-video"> 
+                <source src="./media/video/wall-flash.mp4" type="video/mp4">
+            </video>
+
+            <div id="intro-container">
+                <h1 class="title">Tic-Tac-Toe</h1> 
+
+                <div class="btn-container">
+                    <button>Start Game</button>
+                </div>
+            </div>
+        </header>
+
+        <div id="player-input" class="full-screen slide">
+            <div class="wrapper">
+                <label for="player-nickname"></label>
+                <input type="text" id="player-nickname" placeholder="Enter first player's name" class="hide"> 
+                <div class="submit">
+                    <button class="hide">OK!</button> 
+                </div>
+            </div>
+        </div>
+
+        <div id="gameboard" class="full-screen slide"> 
+            <button id="actual-start" class="hidden"></button>
+            <div class="versus">
+                <div class="left col">
+                    <div class="name">Adrian</div>
+                    <div class="score">0</div>
+                </div>
+                <div class="right col disabled">  
+                    <div class="score">0</div> 
+                    <div class="name">YY</div>
+                </div>
+            </div>
+
+            <div id="board">
+                <div class="wrapper">
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+
+
+    <footer id="footer" class="fixed-presentation">
+        &copy; 2025 All Rights Reserved by CyS3cGuy
+    </footer>
+
     <script src="./js/app.js"></script>
 </body>
+
 </html>
