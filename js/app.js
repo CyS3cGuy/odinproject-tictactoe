@@ -88,6 +88,7 @@ function Player(playerName) {
 function PlayersManager() {
     const players = [];
     let currentPlayerNum = 0;
+    let startFrom = 0; 
 
     const addPlayer = (playerName) => {
         let nickname = playerName;
@@ -128,21 +129,13 @@ function PlayersManager() {
     }; 
 
     const switchPlayerOrder = () => {
-        // Store name and score in the temporary variables
-        let player0Name = players[0].getNickname();
-        let player1Name = players[1].getNickname();
-        let player0Score = players[0].getScore();
-        let player1Score = players[1].getScore();
 
         clearPlayers();
 
-        // Swap the players. now player 0 will become the second player 
-        addPlayer(player1Name);
-        addPlayer(player0Name);
-
-        // Assign score
-        players[0].setScore(player1Score);
-        players[1].setScore(player0Score);
+        // Every time we switch the order, we toggle the startFrom variable;
+        // Then the currentPlayerNum will the startFrom variable initially
+        startFrom = (startFrom + 1) % 2; 
+        currentPlayerNum = startFrom;  
 
     }
 
