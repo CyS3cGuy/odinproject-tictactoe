@@ -88,7 +88,7 @@ function Player(playerName) {
 function PlayersManager() {
     const players = [];
     let currentPlayerNum = 0;
-    let startFrom = 0; 
+    let startFrom = 0;
 
     const addPlayer = (playerName) => {
         let nickname = playerName;
@@ -113,7 +113,7 @@ function PlayersManager() {
     const isEnoughPlayers = () => players.length === 2 ? true : false;
     const switchPlayerTurn = () => currentPlayerNum = (currentPlayerNum + 1) % 2;
     const getActivePlayer = () => players[currentPlayerNum];
-    const getActivePlayerIndex = () => currentPlayerNum; 
+    const getActivePlayerIndex = () => currentPlayerNum;
     const getPlayer = (index) => players[index] ? players[index] : null;
     const clearPlayers = () => {
         players.length = 0;
@@ -121,21 +121,19 @@ function PlayersManager() {
     }
     const getColorByMarker = (marker) => {
         let playerExist = getAllPlayers().find(player => player.getMarker() === marker);
-        
+
         if (playerExist) {
-            return playerExist.getColor(); 
+            return playerExist.getColor();
         }
-        return ""; 
-    }; 
+        return "";
+    };
 
     const switchPlayerOrder = () => {
 
-        clearPlayers();
-
         // Every time we switch the order, we toggle the startFrom variable;
         // Then the currentPlayerNum will the startFrom variable initially
-        startFrom = (startFrom + 1) % 2; 
-        currentPlayerNum = startFrom;  
+        startFrom = (startFrom + 1) % 2;
+        currentPlayerNum = startFrom;
 
     }
 
@@ -308,7 +306,7 @@ function GameModel() {
         }
 
         markCell(currentPlayer, cellPosition);
-        // endTurn();
+        endTurn();
     }
 
 
@@ -318,7 +316,7 @@ function GameModel() {
     return {
         play,
         start,
-        endTurn, 
+        endTurn,
         getPlayersManagerObj,
         getErrorsManagerObj,
         getGameBoardObj,
@@ -457,8 +455,10 @@ function GameboardView() {
     const dsGameboard = document.querySelector("#gameboard");
     const dsStartButton = dsGameboard.querySelector("#actual-start");
     const dsActualBoard = dsGameboard.querySelector("#board .wrapper");
-    const dsVersusLeft = dsGameboard.querySelector(".versus .left"); 
-    const dsVersusRight = dsGameboard.querySelector(".versus .right"); 
+    const dsVersus = dsGameboard.querySelector(".versus");
+    const dlVersusCols = Array.from(dsVersus.querySelectorAll(".col"));
+    const dlPlayerNames = Array.from(dsVersus.querySelectorAll(".name"));
+    const dlPlayerScores = Array.from(dsVersus.querySelectorAll(".score"));
 
     const clickStartButton = () => dsStartButton.click();
 
@@ -473,14 +473,41 @@ function GameboardView() {
     }
 
     const getAllCells = () => boardViewArr;
-    const getCell = (cellPosition) => boardViewArr.find(eachCell => eachCell.getRow() === cellPosition[0] && eachCell.getCol() === cellPosition[1]); 
-    const setVersusName = "";
+    const getCell = (cellPosition) => boardViewArr.find(eachCell => eachCell.getRow() === cellPosition[0] && eachCell.getCol() === cellPosition[1]);
+    const setVersusColsColor = (activePlayerNum, colors) => {
+        dlVersusCols.forEach((eachCol, index) => {
+            eachCol.className = "";
+            eachCol.classList.add("col");
+
+            if (index === activePlayerNum) {
+                eachCol.classList.add(colors[index]);
+                return;
+            }
+
+            eachCol.classList.add("disabled");
+        })
+    }
+
+    const setVersusName = (names) => {
+        dlPlayerNames.forEach((nameEl, index) => nameEl.textContent = names[index]);
+    }
+
+    const setVersusScores = (scores) => {
+        dlPlayerScores.forEach((scoreEl, index) => scoreEl.textContent = scores[index]);
+    }
+
+    const renderVersusCols = (activePlayerNum, colors, names, scores) => {
+        setVersusColsColor(activePlayerNum, colors);
+        setVersusName(names);
+        setVersusScores(scores);
+    }
 
     return {
         clickStartButton,
         getCell,
         getAllCells,
         createBoard,
+        renderVersusCols,
         dsStartButton,
         dsActualBoard,
     }
@@ -632,11 +659,17 @@ const gameController = (function GameController() {
     }
 
     const _startTTT = (event) => {
+        let activePlayerIndex = gameModel.getPlayersManagerObj().getActivePlayerIndex();
+        let playerColors = gameModel.getPlayersManagerObj().getAllPlayers().map(player => player.getColor());
+        let playerNames = gameModel.getPlayersManagerObj().getAllPlayers().map(player => player.getNickname());
+        let playerScores = gameModel.getPlayersManagerObj().getAllPlayers().map(player => player.getScore());
+
         if (gameView.gameBoard.getAllCells().length > 0) {
             return;
         }
 
         // Create the board, then add the listener
+        gameView.gameBoard.renderVersusCols(activePlayerIndex, playerColors, playerNames, playerScores);
         gameView.gameBoard.createBoard();
         gameView.gameBoard.getAllCells().forEach(cell => {
             cell.getButton().addEventListener("click", _play);
@@ -647,8 +680,6 @@ const gameController = (function GameController() {
         let varName = Object.keys({ _play })[0].slice(1); // Get the variable name  
         performLogic.find(obj => obj.name === varName).logic(event);
         render.find(obj => obj.name === varName).logic();
-
-        gameModel.endTurn(); 
     }
 
     // Logic and render
@@ -688,27 +719,30 @@ const gameController = (function GameController() {
         name: "play",
         logic: function () {
             let board = gameModel.getGameBoardObj().get();
+            let activeColor = gameModel.getPlayersManagerObj().getActivePlayer().getColor();
             let activePlayerIndex = gameModel.getPlayersManagerObj().getActivePlayerIndex();
-            let nextActiveColor = gameModel.getPlayersManagerObj().getPlayer((activePlayerIndex + 1) % 2).getColor();
+            let playerColors = gameModel.getPlayersManagerObj().getAllPlayers().map(player => player.getColor());
+            let playerNames = gameModel.getPlayersManagerObj().getAllPlayers().map(player => player.getNickname());
+            let playerScores = gameModel.getPlayersManagerObj().getAllPlayers().map(player => player.getScore());
 
             for (let i = 0; i < ROWS; i++) {
                 for (let j = 0; j < COLS; j++) {
-                    let cellPos = [i,j];
+                    let cellPos = [i, j];
                     let cell = board[i][j];
                     let modelMarker = cell.getMarker();
-                    let markerColor = gameModel.getPlayersManagerObj().getColorByMarker(modelMarker); 
+                    let markerColor = gameModel.getPlayersManagerObj().getColorByMarker(modelMarker);
 
                     if (modelMarker === "") {
-                        gameView.gameBoard.getCell(cellPos).render(modelMarker, nextActiveColor);
+                        gameView.gameBoard.getCell(cellPos).render(modelMarker, activeColor);
                     }
                     else {
-                        gameView.gameBoard.getCell(cellPos).render(modelMarker, markerColor); 
+                        gameView.gameBoard.getCell(cellPos).render(modelMarker, markerColor);
                     }
-                    
+
                 }
             }
 
-            
+            gameView.gameBoard.renderVersusCols(activePlayerIndex, playerColors, playerNames, playerScores); 
         }
     })
 
