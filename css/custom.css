@@ -112,7 +112,7 @@ button {
 #main {
     scroll-snap-type: y mandatory;
     /* change this later */
-    overflow-y: auto;  
+    overflow-y: hidden;   
     scrollbar-width: none;
     height: 100vh;
 }
