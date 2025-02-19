@@ -162,6 +162,7 @@ function ErrorsManager() {
     const exceedPlayers = "Too many players!"
     const emptyNameInput = "Did you forget to enter a name??"
     const duplicateName = "Name has been taken. Try another one?"
+    const longName = "Name is too long. Try shorten it to max 5 characters?"
 
     let errorMessage = "";
 
@@ -171,6 +172,7 @@ function ErrorsManager() {
     const getEmptyNameInput = () => emptyNameInput;
     const getExceedPlayersError = () => exceedPlayers;
     const getDuplicateNameError = () => duplicateName;
+    const getLongNameError = () => longName; 
     const set = (msg) => errorMessage = msg;
     const get = () => errorMessage;
 
@@ -181,6 +183,7 @@ function ErrorsManager() {
         getEmptyNameInput,
         getExceedPlayersError,
         getDuplicateNameError, 
+        getLongNameError,
         set,
         get,
     }
@@ -863,6 +866,12 @@ const gameController = (function GameController() {
         if (playerName === "") {
             performErrorLogic(gameModel.getErrorsManagerObj().getEmptyNameInput());
             renderError();
+            return;
+        }
+
+        if (playerName.length > 5) {
+            performErrorLogic(gameModel.getErrorsManagerObj().getLongNameError());
+            renderError(); 
             return;
         }
 
