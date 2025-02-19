@@ -453,7 +453,7 @@ function PlayerInputView() {
             resetLabel();
             resetInput();
             if (numPlayers === 0) {
-                setPlaceholder("Enter first player's name");
+                setPlaceholder("Player 1 Name");
                 setInputColor("green");
                 typeWriter.type("Hello there. Who are you?", dsLabel, () => {
                     waitAgent.wait(10, () => {
@@ -462,7 +462,7 @@ function PlayerInputView() {
                 })
             }
             else if (numPlayers === 1) {
-                setPlaceholder("Enter second player's name");
+                setPlaceholder("Player 2 Name"); 
                 setInputColor("blue");
                 typeWriter.type(`Hello ${firstPlayerName ? firstPlayerName : ""}. Who dares to challenge you?`, dsLabel, () => {
                     waitAgent.wait(10, () => {

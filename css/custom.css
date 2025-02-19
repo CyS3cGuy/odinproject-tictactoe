@@ -7,7 +7,7 @@
     --screen-player-0: rgb(218, 68, 48);
     --screen-player-0-5: rgba(180, 105, 122, 0.5);
 
-    --font-size-standard: clamp(3rem, calc(4vw + 1rem), 5rem);
+    --font-size-standard: clamp(3rem, calc(3.5vw + 1rem), 4rem); 
     --font-size-h1: clamp(6rem, calc(7vw + 1rem), 8rem); 
     --font-size-h2: clamp(4rem, calc(5vw + 1rem), 6rem);
     --font-size-small: clamp(1.6rem, calc(2vw + 1rem), 2.4rem); 
@@ -163,8 +163,12 @@ button {
                 animation: animateStartButton 4s infinite;
                 padding: 2rem;
                 border-radius: 20px;
-                box-shadow: inset 2px 2px 5px 2px rgba(99, 99, 99, 0.3);
+                box-shadow: inset 2px 2px 5px 2px rgba(99, 99, 99, 0.3); 
 
+            }
+
+            button:hover{
+                font-weight: bold; 
             }
 
 
@@ -182,7 +186,7 @@ button {
     justify-content: center;
 
     .wrapper {
-        height: 50%; 
+        height: 60%;  
         width: max(90%, 40rem); 
         display: grid;
         grid-template-rows: 2fr 1fr 1fr;    
@@ -198,6 +202,7 @@ button {
 
         input {
             text-align: center;
+            width: 100%; 
             outline: none;
             padding: 2rem;
             border-radius: 15px;
@@ -217,7 +222,7 @@ button {
         }
 
         input::placeholder {
-            color: var(--placeholder);
+            color: var(--placeholder);  
             opacity: 1;
             transition: all 500ms;
         }
@@ -256,7 +261,11 @@ button {
     background-size: 180% 180%;
     animation: game-bg-gradient-animation 3s ease infinite;
 
-    .versus {
+    display: grid;
+    grid-template-rows: auto 1fr;
+
+    .versus { 
+
         display: grid;
         grid-template-columns: 1fr 1fr;
 
@@ -284,8 +293,8 @@ button {
     }
 
     #board {
-        width: 100%;
-        height: 100%;
+        width: clamp(30rem, 50%, 60rem);  
+        justify-self: center; 
 
         display: flex;
         justify-content: center;
@@ -293,7 +302,7 @@ button {
 
 
         .wrapper {
-            width: min(60%, 80rem);  
+            width: 100%; 
             aspect-ratio: 1;
 
             display: grid;
