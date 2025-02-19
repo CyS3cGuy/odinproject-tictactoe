@@ -4,13 +4,13 @@
     --primary: rgb(41, 4, 4);
     --text: rgb(224, 220, 220);
     --placeholder: rgb(230, 230, 230);
-    --screen-player-0: rgb(138, 44, 226);
-    --screen-player-0-5: rgb(138, 44, 226, 0.5);
+    --screen-player-0: rgb(218, 68, 48);
+    --screen-player-0-5: rgba(180, 105, 122, 0.5);
 
     --font-size-standard: clamp(3rem, calc(4vw + 1rem), 5rem);
-    --font-size-h1: clamp(6rem, calc(7vw + 1rem), 8rem);
+    --font-size-h1: clamp(6rem, calc(7vw + 1rem), 8rem); 
     --font-size-h2: clamp(4rem, calc(5vw + 1rem), 6rem);
-    --font-size-small: clamp(1.6rem, calc(2vw + 1rem), 2.4rem);
+    --font-size-small: clamp(1.6rem, calc(2vw + 1rem), 2.4rem); 
 
 
 }
@@ -61,7 +61,7 @@ button {
     z-index: 99;
     background: rgb(0, 0, 0, 0.6);
 
-    position: sticky;
+    position: absolute;
     top: 50%;
     transform: translateY(-50%);
 
@@ -112,7 +112,7 @@ button {
 #main {
     scroll-snap-type: y mandatory;
     /* change this later */
-    overflow-y: auto;
+    overflow-y: auto;  
     scrollbar-width: none;
     height: 100vh;
 }
@@ -176,15 +176,19 @@ button {
     background: linear-gradient(296deg, #1b71d5, #9add50, #ddb4e1, #3c488e);
     background-size: 240% 240%;
     animation: gradient-animation 12s ease infinite;
+     
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     .wrapper {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
+        height: 50%; 
+        width: max(90%, 40rem); 
+        display: grid;
+        grid-template-rows: 2fr 1fr 1fr;    
         justify-content: center;
-        align-items: center;
-        gap: 3rem;
-        padding: 2rem;
+        align-items: center; 
+        padding: 5rem; 
         text-align: center;
 
         label {
@@ -198,11 +202,12 @@ button {
             padding: 2rem;
             border-radius: 15px;
             border: 5px solid var(--screen-player-0-5);
-            transition: 1000ms;
+            transition: 100ms;
             opacity: 1;
         }
 
         input.hide {
+            display: none;
             opacity: 0;
         }
 
@@ -233,6 +238,7 @@ button {
         }
 
         button.hide {
+            display: none;
             opacity: 0;
         }
 
@@ -287,24 +293,28 @@ button {
 
 
         .wrapper {
-            width: max(60%, 300px);
+            width: min(60%, 80rem);  
             aspect-ratio: 1;
 
             display: grid;
             grid-template-rows: repeat(3, 1fr);
             grid-template-columns: repeat(3, 1fr);
             gap: 1rem; 
+            position: relative; 
 
-            div {
+            .cell {
 
                 button {
                     width: 100%;
                     height: 100%;
+                    font-size: var(--font-size-h1);
+                    font-weight: bold; 
                 }
 
                 button.unset {
                     background: rgb(223, 223, 223, 0.6);  
                     border: 10px solid rgb(100, 100, 100);
+                    transition: 500ms; 
                 }
 
                 button.green.unset:hover {
@@ -323,13 +333,87 @@ button {
                     background-color: rgb(187, 255, 187);
                     color: rgb(0, 128, 0);
                     border: 10px solid rgb(0, 128, 0);
+                    transition: 500ms; 
                 }
 
                 button.blue.set {
                     background-color: rgb(155, 155, 255); 
                     color: rgb(0, 0, 255); 
                     border: 10px solid rgb(0, 0, 255); 
+                    transition: 500ms;  
                 }
+            }
+
+            .long-straight {
+                border-top-style: solid;
+                border-top-width: var(--font-size-small);  
+                border-top-color: black;
+                width: 95%; 
+                position: absolute;  
+                transition: 500ms;  
+            }
+
+            .long-straight.green {
+                border-top-color: green;
+            }
+
+            .long-straight.blue {
+                border-top-color: blue;
+            }
+
+            .long-straight.hide {
+                width: 0;
+                overflow: hidden; 
+            }
+
+            .long-straight.topHorizontal {
+                left: 50%;
+                top: calc(100% / 6); 
+                transform: translate(-50%, -50%); 
+            }
+
+            .long-straight.midHorizontal {
+                left: 50%;
+                top: calc(3 * 100% / 6); 
+                transform: translate(-50%, -50%); 
+            }
+
+            .long-straight.btmHorizontal {
+                left: 50%;
+                top: calc(5 * 100% / 6); 
+                transform: translate(-50%, -50%); 
+            }
+
+            .long-straight.leftVertical {
+                left: calc(100% / 6);
+                top: calc(3 * 100% / 6); 
+                transform: translate(-50%, -50%) rotate(90deg); 
+            }
+
+            .long-straight.midVertical {
+                left: calc(3 * 100% / 6);
+                top: calc(3 * 100% / 6); 
+                transform: translate(-50%, -50%) rotate(90deg); 
+            }
+
+            .long-straight.rightVertical {
+                left: calc(5 * 100% / 6);
+                top: calc(3 * 100% / 6); 
+                transform: translate(-50%, -50%) rotate(90deg); 
+            }
+
+            .long-straight.l2rDiagonal {
+                width: 120%; 
+                left: 50%;
+                top: calc(3 * 100% / 6); 
+                transform: translate(-50%, -50%) rotate(45deg); 
+            } 
+
+            .long-straight.r2lDiagonal {
+                width: 120%;  
+                left: 50%;
+                top: calc(3 * 100% / 6); 
+                transform: translate(-50%, -50%) rotate(-45deg);  
             }
         }
 
@@ -342,7 +426,7 @@ button {
 
     height: 100%;
     z-index: 99;
-    background: rgb(0, 0, 0, 0.6);
+    background: rgb(0, 0, 0, 0.9); 
 
     position: absolute; 
     top: 50%;
@@ -361,7 +445,35 @@ button {
         justify-items: center;
         align-items: center;
 
-        
+        .round-message {
+            font-weight: bold; 
+            color: white; 
+            text-align: center; 
+
+            #winner-round.green {
+                color: rgb(125, 245, 125);      
+            }
+
+            #winner-round.blue {
+                color: rgb(88, 88, 240); 
+            }
+
+
+        }
+
+        button {
+            padding: 1rem 3rem;
+            border-radius: 10px; 
+            font-weight: bold; 
+            background: white; 
+            transform: scale(1);
+            transition: 300ms;  
+        }
+
+        button:hover {
+            background: rgb(173, 173, 173);  
+            transform: scale(1.2);
+        }
     }
 }
 

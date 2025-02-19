@@ -89,6 +89,7 @@ function PlayersManager() {
     const players = [];
     let currentPlayerNum = 0;
     let startFrom = 0;
+    let winnerRound = null;
 
     const addPlayer = (playerName) => {
         let nickname = playerName;
@@ -115,6 +116,8 @@ function PlayersManager() {
     const getActivePlayer = () => players[currentPlayerNum];
     const getActivePlayerIndex = () => currentPlayerNum;
     const getPlayer = (index) => players[index] ? players[index] : null;
+    const setWinner = (player) => winnerRound = player;
+    const getWinner = () => winnerRound;
     const clearPlayers = () => {
         players.length = 0;
         currentPlayerNum = 0;
@@ -142,6 +145,8 @@ function PlayersManager() {
         getPlayer,
         getAllPlayers,
         getColorByMarker,
+        setWinner,
+        getWinner,
         switchPlayerTurn,
         switchPlayerOrder,
         clearPlayers,
@@ -156,6 +161,7 @@ function ErrorsManager() {
     const noPlayers = "Insufficient players. Create at least 2 players first";
     const exceedPlayers = "Too many players!"
     const emptyNameInput = "Did you forget to enter a name??"
+    const duplicateName = "Name has been taken. Try another one?"
 
     let errorMessage = "";
 
@@ -164,6 +170,7 @@ function ErrorsManager() {
     const getInsufficentPlayersError = () => noPlayers;
     const getEmptyNameInput = () => emptyNameInput;
     const getExceedPlayersError = () => exceedPlayers;
+    const getDuplicateNameError = () => duplicateName;
     const set = (msg) => errorMessage = msg;
     const get = () => errorMessage;
 
@@ -173,6 +180,7 @@ function ErrorsManager() {
         getInsufficentPlayersError,
         getEmptyNameInput,
         getExceedPlayersError,
+        getDuplicateNameError, 
         set,
         get,
     }
@@ -185,12 +193,16 @@ function GameModel() {
         topHorizontal: [[0, 0], [0, 1], [0, 2]],
         midHorizontal: [[1, 0], [1, 1], [1, 2]],
         btmHorizontal: [[2, 0], [2, 1], [2, 2]],
-        topVertical: [[0, 0], [1, 0], [2, 0]],
+        leftVertical: [[0, 0], [1, 0], [2, 0]],
         midVertical: [[0, 1], [1, 1], [2, 1]],
-        btmVertical: [[0, 2], [1, 2], [2, 2]],
+        rightVertical: [[0, 2], [1, 2], [2, 2]],
         l2rDiagonal: [[0, 0], [1, 1], [2, 2]],
         r2lDiagonal: [[0, 2], [1, 1], [2, 0]],
     }
+
+    let endRound = false;
+    let wantToContinue = false;
+    let winOrientation = ""; 
 
 
     const gameBoard = GameBoard();
@@ -199,6 +211,8 @@ function GameModel() {
 
     const getPlayersManagerObj = () => playersManager;
     const getErrorsManagerObj = () => errorsManager;
+    const hasRoundEnd = () => endRound;
+    const setRoundEnd = (hasRoundEnd) => endRound = hasRoundEnd;
 
     const start = () => {
         playersManager.addPlayer();
@@ -206,6 +220,7 @@ function GameModel() {
     }
 
     const getGameBoardObj = () => gameBoard;
+    const getWinOrientation = () => winOrientation; 
 
     const markCell = (player, cellPosition) => {
 
@@ -224,6 +239,7 @@ function GameModel() {
             allSameMarker = STRAIGHTS[key].map(cellPos => gameBoard.getCell(cellPos).getMarker()).every(marker => marker === playerMarker);
 
             if (allSameMarker) {
+                winOrientation = key;  
                 break;
             }
         }
@@ -246,6 +262,7 @@ function GameModel() {
 
     const reset = (chooseToContinue) => {
         gameBoard.reset();
+        wantToContinue = chooseToContinue;
         if (chooseToContinue) {
             playersManager.switchPlayerOrder();
             return;
@@ -254,8 +271,11 @@ function GameModel() {
 
     }
 
+    const chooseContinue = () => wantToContinue;
+
     const win = (player) => {
         player.win();
+        playersManager.setWinner(player);
 
         console.log(`Logger: ${player.getNickname()} WINS this round.`);
         console.log(`Logger: ${playersManager.getAllPlayers()[0].getNickname()} : ${playersManager.getAllPlayers()[0].getScore()}`);
@@ -263,12 +283,13 @@ function GameModel() {
     }
 
     const draw = () => {
+        playersManager.setWinner(null);
         console.log(`Logger: This round is a DRAW.`);
         console.log(`Logger: ${playersManager.getAllPlayers()[0].getNickname()} : ${playersManager.getAllPlayers()[0].getScore()}`);
         console.log(`Logger: ${playersManager.getAllPlayers()[1].getNickname()} : ${playersManager.getAllPlayers()[1].getScore()}`);
     }
 
-    const endTurn = () => {
+    const endTurnTest = () => {
         let currentPlayer = playersManager.getActivePlayer();
 
         if (isStraight(currentPlayer.getMarker())) {
@@ -287,20 +308,41 @@ function GameModel() {
 
     }
 
+    const endTurn = () => {
+        let currentPlayer = playersManager.getActivePlayer();
+        if (isStraight(currentPlayer.getMarker())) {
+            win(currentPlayer);
+            setRoundEnd(true);
+            return;
+        }
+
+        if (gameBoard.isFull()) {
+            draw();
+            setRoundEnd(true);
+            return;
+        }
+
+        setRoundEnd(false);
+        playersManager.switchPlayerTurn();
+    }
+
     const play = (cellPosition) => {
         let currentPlayer = playersManager.getActivePlayer();
 
         if (!playersManager.getAllPlayers() || playersManager.getAllPlayers().length < 2) {
+            errorsManager.set(errorsManager.getInsufficentPlayersError());
             console.log(errorsManager.getInsufficentPlayersError());
             return;
         }
 
         if (gameBoard.isOutOfBound(cellPosition)) {
+            errorsManager.set(errorsManager.getCellOutOfBoundError());
             console.log(errorsManager.getCellOutOfBoundError());
             return;
         }
 
         if (!gameBoard.isCellEmpty(cellPosition)) {
+            errorsManager.set(errorsManager.getCellMarkedError());
             console.log(errorsManager.getCellMarkedError());
             return;
         }
@@ -317,25 +359,31 @@ function GameModel() {
         play,
         start,
         endTurn,
+        reset,
+        chooseContinue,
         getPlayersManagerObj,
         getErrorsManagerObj,
         getGameBoardObj,
+        hasRoundEnd,
+        getWinOrientation, 
     }
 }
 
 function GameView() {
-    const { scrollTo } = MainView();
+    const { scrollTowards } = MainView();
     const header = HeaderView();
     const playerInput = PlayerInputView();
     const error = ErrorView();
     const gameBoard = GameboardView();
+    const endTurn = EndTurnView();
 
     return {
         header,
         error,
         gameBoard,
         playerInput,
-        scrollTo,
+        endTurn,
+        scrollTowards,
     }
 }
 
@@ -344,21 +392,18 @@ function MainView() {
     const dpSlide = Array.from(dsMain.querySelectorAll(".full-screen"));
 
 
-    const scrollTo = (scrollSnapIndex) => {
-        if (!scrollSnapIndex || typeof scrollSnapIndex !== "number") {
-            return;
-        }
+    const scrollTowards = (scrollSnapIndex) => {
         dpSlide[scrollSnapIndex].scrollIntoView({ behavior: "smooth" });
     }
 
     return {
         dsMain,
-        scrollTo,
+        scrollTowards,
     }
 }
 
 function HeaderView() {
-    const { dsMain, scrollTo } = MainView();
+    const { dsMain, scrollTowards } = MainView();
     const order = 0;
 
     const dsHeaderBox = document.querySelector("#header");
@@ -372,14 +417,14 @@ function HeaderView() {
 }
 
 function PlayerInputView() {
-    const { dsMain, scrollTo } = MainView();
+    const { dsMain, scrollTowards } = MainView();
 
     const dsWrapper = document.querySelector("#player-input");
     const dsLabel = dsWrapper.querySelector("label");
     const dsInput = dsWrapper.querySelector("input");
     const dsSubmitButton = dsWrapper.querySelector("button");
     const waitAgent = WaitAgent();
-    const typeWriter = TypeWriter(50);
+    const typeWriter = TypeWriter(40);  
 
     const order = 1;
 
@@ -403,7 +448,7 @@ function PlayerInputView() {
     }
 
     const prepareInputs = (numPlayers, firstPlayerName, secondPlayerName, callBack) => {
-        waitAgent.wait(500, () => {
+        waitAgent.wait(100, () => {
             hideInputs(true);
             resetLabel();
             resetInput();
@@ -411,7 +456,7 @@ function PlayerInputView() {
                 setPlaceholder("Enter first player's name");
                 setInputColor("green");
                 typeWriter.type("Hello there. Who are you?", dsLabel, () => {
-                    waitAgent.wait(1000, () => {
+                    waitAgent.wait(10, () => {
                         hideInputs(false);
                     })
                 })
@@ -420,24 +465,30 @@ function PlayerInputView() {
                 setPlaceholder("Enter second player's name");
                 setInputColor("blue");
                 typeWriter.type(`Hello ${firstPlayerName ? firstPlayerName : ""}. Who dares to challenge you?`, dsLabel, () => {
-                    waitAgent.wait(1000, () => {
+                    waitAgent.wait(10, () => {
                         hideInputs(false);
                     })
                 })
             }
             else {
                 typeWriter.type(`Looks like we are all set! It's ${firstPlayerName ? firstPlayerName : "Error getting first name."} vs ${secondPlayerName ? secondPlayerName : "Error getting second name."}!!`, dsLabel, () => {
-                    waitAgent.wait(1000, () => {
-                        scrollTo(getOrder() + 1);
-                        if (callBack) callBack();
+                    if (callBack) callBack();
+
+                    waitAgent.wait(700, () => {
+                        scrollTowards(getOrder() + 1); 
                     })
                 })
             }
         })
-
-
     }
 
+    const removeSubmitButtonListener = (callBackToRemove) => {
+        dsSubmitButton.removeEventListener("click", callBackToRemove); 
+    }
+
+    const addSubmitButtonListener = (callBack) => {
+        dsSubmitButton.addEventListener("click", callBack);
+    }
 
     return {
         dsSubmitButton,
@@ -445,7 +496,9 @@ function PlayerInputView() {
         getInputVal,
         prepareInputs,
         getOrder,
-        scrollTo,
+        scrollTowards,
+        removeSubmitButtonListener,
+        addSubmitButtonListener,  
     }
 }
 
@@ -460,6 +513,8 @@ function GameboardView() {
     const dlPlayerNames = Array.from(dsVersus.querySelectorAll(".name"));
     const dlPlayerScores = Array.from(dsVersus.querySelectorAll(".score"));
 
+    const straightLine = StraightLineView(dsActualBoard); 
+
     const clickStartButton = () => dsStartButton.click();
 
     const createBoard = () => {
@@ -470,10 +525,24 @@ function GameboardView() {
                 boardViewArr.push(CellView(i, j, dsActualBoard));
             }
         }
+
+        straightLine.create(); 
     }
+
+    const getStraightLine = () => straightLine; 
 
     const getAllCells = () => boardViewArr;
     const getCell = (cellPosition) => boardViewArr.find(eachCell => eachCell.getRow() === cellPosition[0] && eachCell.getCol() === cellPosition[1]);
+    const removeCellsListener = (callBackToRemove) => {
+        boardViewArr.forEach(cell => {
+            cell.getButton().removeEventListener("click", callBackToRemove); 
+        })
+    }
+    const addCellsListener = (callBack) => {
+        boardViewArr.forEach(cell => {
+            cell.getButton().addEventListener("click", callBack); 
+        })
+    }
     const setVersusColsColor = (activePlayerNum, colors) => {
         dlVersusCols.forEach((eachCol, index) => {
             eachCol.className = "";
@@ -502,14 +571,119 @@ function GameboardView() {
         setVersusScores(scores);
     }
 
+    const clearVersusCols = () => {
+        setVersusName("");
+        setVersusScores("");
+
+        dlVersusCols.forEach(eachCol => {
+            eachCol.className = "";
+            eachCol.classList.add("col");
+        })
+    }
+
+    const clearBoard = () => {
+        // Clear all cells, including straight line 
+        while (dsActualBoard.firstChild) {
+            dsActualBoard.removeChild(dsActualBoard.firstChild); 
+        }
+
+        boardViewArr.length = 0;
+    }
+
+    const restart = () => {
+        clearVersusCols();
+        clearBoard();
+    }
+
+    const renderBoard = (modelBoard, activeColor, playersManagerObj) => {
+        for (let i = 0; i < ROWS; i++) {
+            for (let j = 0; j < COLS; j++) {
+                let cellPos = [i, j];
+                let cell = modelBoard[i][j];
+                let modelMarker = cell.getMarker();
+                let markerColor = playersManagerObj.getColorByMarker(modelMarker);
+
+                if (modelMarker === "") {
+                    getCell(cellPos).render(modelMarker, activeColor);
+                }
+                else {
+                    getCell(cellPos).render(modelMarker, markerColor);
+                }
+
+            }
+        }
+    }
+
     return {
         clickStartButton,
         getCell,
         getAllCells,
+        removeCellsListener,
+        addCellsListener, 
+        getStraightLine,
         createBoard,
         renderVersusCols,
+        renderBoard,
+        restart,
         dsStartButton,
         dsActualBoard,
+    }
+}
+
+function StraightLineView (dsActualBoard) {
+    const els = document.createElement("div");
+
+    const create = () => {
+        clearClass(); 
+        hide(); 
+        dsActualBoard.appendChild(els);  
+        
+    }
+
+    const clearClass = () => {
+        els.className = "";
+        els.classList.add("long-straight"); 
+    }
+
+    const hide = () => {
+        els.classList.add("hide"); 
+    }
+
+    const show = () => {
+        els.classList.remove("hide"); 
+    }
+
+    const setOrientation = (orientation) => {
+        els.classList.add(orientation);
+    }
+
+    const setColor = (color) => {
+        els.classList.add(color); 
+    }
+
+    const renderWin = (orientation, color) => {
+        if (!color) {
+            return; 
+        }
+
+        if (orientation === "" || !orientation) {
+            return; 
+        }
+
+        setOrientation(orientation);
+        setColor(color);
+        show(); 
+    }
+
+    const renderContinue = () => {
+        clearClass();
+        hide(); 
+    }
+
+    return {
+        create, 
+        renderWin,
+        renderContinue, 
     }
 }
 
@@ -528,6 +702,7 @@ function CellView(r, c, dsActualBoard) {
         playShapeButton.classList.add("unset");
         playShapeButton.classList.add("green");
         els.appendChild(playShapeButton);
+        els.classList.add("cell"); 
         dsActualBoard.appendChild(els);
     }
 
@@ -608,6 +783,44 @@ function ErrorView() {
     }
 }
 
+function EndTurnView() {
+    const dsEndTurn = document.querySelector("#endturn");
+    const dsContinueButton = dsEndTurn.querySelector(".continue button");
+    const dsRestartButton = dsEndTurn.querySelector(".restart button");
+    const dsWinnerName = dsEndTurn.querySelector("#winner-round");
+    const dsMessage = dsEndTurn.querySelector(".round-message .message");
+
+    const MESSAGES = {
+        WIN: " WINS this round! Wanna continue?",
+        DRAW: "This round is a DRAW. Wanna continue?"
+    }
+
+    const closeModal = () => dsEndTurn.classList.add("hide");
+    const showModal = () => dsEndTurn.classList.remove("hide");
+    const renderRoundMessage = (winner) => {
+        if (!winner) {
+            dsWinnerName.textContent = "";
+            dsWinnerName.className = "";
+
+            dsMessage.textContent = MESSAGES.DRAW;
+            return;
+        }
+        dsWinnerName.textContent = winner.getNickname();
+        dsWinnerName.className = "";
+        dsWinnerName.classList.add(winner.getColor());
+
+        dsMessage.textContent = MESSAGES.WIN;
+    }
+
+    return {
+        dsContinueButton,
+        dsRestartButton,
+        showModal,
+        closeModal,
+        renderRoundMessage,
+    }
+}
+
 
 
 const gameController = (function GameController() {
@@ -625,14 +838,19 @@ const gameController = (function GameController() {
         gameModel.getErrorsManagerObj().set(errorMessage);
     }
     const renderError = () => {
+        if (gameModel.getErrorsManagerObj().get() === "") {
+            return;   
+        }
+        
         gameView.error.setMessage(gameModel.getErrorsManagerObj().get());
         gameView.error.showModal();
+        gameModel.getErrorsManagerObj().set(""); 
     }
 
     // Listener
     const _startGame = (event) => {
 
-        gameView.scrollTo(1); // scroll to next slide
+        gameView.scrollTowards(1); // scroll to next slide  
         gameView.playerInput.prepareInputs(0);
 
     }
@@ -654,11 +872,20 @@ const gameController = (function GameController() {
             return;
         }
 
+        if (gameModel.getPlayersManagerObj().getAllPlayers().length > 0) {
+            if (playerName === gameModel.getPlayersManagerObj().getPlayer(0).getNickname()) {
+                performErrorLogic(gameModel.getErrorsManagerObj().getDuplicateNameError());
+                renderError();
+                return;
+            }
+        }
+
         performLogic.find(obj => obj.name === varName).logic(playerName);
         render.find(obj => obj.name === varName).logic(playerName);
     }
 
     const _startTTT = (event) => {
+        console.log("starting ttt");  
         let activePlayerIndex = gameModel.getPlayersManagerObj().getActivePlayerIndex();
         let playerColors = gameModel.getPlayersManagerObj().getAllPlayers().map(player => player.getColor());
         let playerNames = gameModel.getPlayersManagerObj().getAllPlayers().map(player => player.getNickname());
@@ -671,13 +898,30 @@ const gameController = (function GameController() {
         // Create the board, then add the listener
         gameView.gameBoard.renderVersusCols(activePlayerIndex, playerColors, playerNames, playerScores);
         gameView.gameBoard.createBoard();
-        gameView.gameBoard.getAllCells().forEach(cell => {
-            cell.getButton().addEventListener("click", _play);
-        })
+        gameView.gameBoard.addCellsListener(_play); 
     }
 
     const _play = (event) => {
         let varName = Object.keys({ _play })[0].slice(1); // Get the variable name  
+        
+        performLogic.find(obj => obj.name === varName).logic(event);
+
+        if (gameModel.getErrorsManagerObj().get() !== "") {
+            renderError(); 
+            return; 
+        }
+        
+        render.find(obj => obj.name === varName).logic();
+    }
+
+    const _continue = (event) => {
+        let varName = Object.keys({ _continue })[0].slice(1); // Get the variable name  
+        performLogic.find(obj => obj.name === varName).logic(event);
+        render.find(obj => obj.name === varName).logic();
+    }
+
+    const _restart = (event) => {
+        let varName = Object.keys({ _restart })[0].slice(1); // Get the variable name  
         performLogic.find(obj => obj.name === varName).logic(event);
         render.find(obj => obj.name === varName).logic();
     }
@@ -699,6 +943,20 @@ const gameController = (function GameController() {
             let col = buttonClicked.dataset.col;
 
             gameModel.play([row, col]);
+        }
+    })
+
+    performLogic.push({
+        name: "continue",
+        logic: function (event) {
+            gameModel.reset(true);
+        }
+    })
+
+    performLogic.push({
+        name: "restart",
+        logic: function (event) {
+            gameModel.reset(false);
         }
     })
 
@@ -724,38 +982,66 @@ const gameController = (function GameController() {
             let playerColors = gameModel.getPlayersManagerObj().getAllPlayers().map(player => player.getColor());
             let playerNames = gameModel.getPlayersManagerObj().getAllPlayers().map(player => player.getNickname());
             let playerScores = gameModel.getPlayersManagerObj().getAllPlayers().map(player => player.getScore());
+            let playersManagerObj = gameModel.getPlayersManagerObj();
+            let winner = gameModel.getPlayersManagerObj().getWinner();
+            let winOrientation = gameModel.getWinOrientation(); 
 
-            for (let i = 0; i < ROWS; i++) {
-                for (let j = 0; j < COLS; j++) {
-                    let cellPos = [i, j];
-                    let cell = board[i][j];
-                    let modelMarker = cell.getMarker();
-                    let markerColor = gameModel.getPlayersManagerObj().getColorByMarker(modelMarker);
+            // Render the board
+            gameView.gameBoard.renderBoard(board, activeColor, playersManagerObj);
 
-                    if (modelMarker === "") {
-                        gameView.gameBoard.getCell(cellPos).render(modelMarker, activeColor);
-                    }
-                    else {
-                        gameView.gameBoard.getCell(cellPos).render(modelMarker, markerColor);
-                    }
 
+            // Render versus columns
+            gameView.gameBoard.renderVersusCols(activePlayerIndex, playerColors, playerNames, playerScores);
+
+            // Check if round truly ends. If yes, show the endturn modal
+            if (gameModel.hasRoundEnd()) {
+                if (winner) {
+                    gameView.gameBoard.getStraightLine().renderWin(winOrientation, winner.getColor()); 
                 }
-            }
+                gameView.gameBoard.removeCellsListener(_play); // Remove all listeners to prevent further clicking 
 
-            gameView.gameBoard.renderVersusCols(activePlayerIndex, playerColors, playerNames, playerScores); 
+                waitAgent.wait(1000, () =>  {
+                    gameView.endTurn.renderRoundMessage(gameModel.getPlayersManagerObj().getWinner());
+                    gameView.endTurn.showModal();
+                })
+            }
+        }
+    })
+
+    render.push({
+        name: "continue",
+        logic: function () {
+            let board = gameModel.getGameBoardObj().get();
+            let activeColor = gameModel.getPlayersManagerObj().getActivePlayer().getColor();
+            let playersManagerObj = gameModel.getPlayersManagerObj();
+            let activePlayerIndex = gameModel.getPlayersManagerObj().getActivePlayerIndex();
+            let playerColors = gameModel.getPlayersManagerObj().getAllPlayers().map(player => player.getColor());
+            let playerNames = gameModel.getPlayersManagerObj().getAllPlayers().map(player => player.getNickname());
+            let playerScores = gameModel.getPlayersManagerObj().getAllPlayers().map(player => player.getScore());
+
+            gameView.endTurn.closeModal();
+            gameView.gameBoard.renderBoard(board, activeColor, playersManagerObj);
+            gameView.gameBoard.getStraightLine().renderContinue(); 
+            gameView.gameBoard.renderVersusCols(activePlayerIndex, playerColors, playerNames, playerScores);
+
+            gameView.gameBoard.addCellsListener(_play); // Add back the event listener
+        }
+    })
+
+    render.push({
+        name: "restart",
+        logic: function () {
+            gameView.endTurn.closeModal();
+            gameView.gameBoard.restart(); 
+            gameView.scrollTowards(0);
         }
     })
 
     gameView.header.dsStartGameButton.addEventListener("click", _startGame);
     gameView.playerInput.dsSubmitButton.addEventListener("click", _addPlayer);
     gameView.gameBoard.dsStartButton.addEventListener("click", _startTTT);
-
-
-
-
-    return {
-        gameModel,
-    }
+    gameView.endTurn.dsContinueButton.addEventListener("click", _continue);
+    gameView.endTurn.dsRestartButton.addEventListener("click", _restart);
 })();
 
 // Utilities
@@ -787,7 +1073,10 @@ function TypeWriter(speed) {
 
 function WaitAgent() {
     const wait = (waitHowLong, callBackUponWait) => {
-        setTimeout(callBackUponWait, waitHowLong);
+        let id = setTimeout(() => {
+            clearInterval(id);
+            callBackUponWait();
+        }, waitHowLong);
     }
 
     return {
@@ -804,5 +1093,4 @@ function BoardDimension() {
         COLS,
     }
 }
-
-console.log(gameController);  
+ 
